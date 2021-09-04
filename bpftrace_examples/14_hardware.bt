@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+hardware:cache-misses:1000000
+{
+    @[pid] = count();
+}

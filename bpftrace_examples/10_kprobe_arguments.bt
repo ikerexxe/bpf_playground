@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+kprobe:do_sys_open
+{
+    printf("opening: %s, flags %d\n", str(arg1), arg2);
+}

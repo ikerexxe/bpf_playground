@@ -1,0 +1,18 @@
+#!/usr/bin/bpftrace
+
+//Print when the files is opened, read and closed
+
+tracepoint:syscalls:sys_enter_openat /comm == "myprog"/
+{
+    printf("PID '%d' has opened file %s at %d ms\n", pid, str(args->filename), nsecs / 1000000);
+}
+
+tracepoint:syscalls:sys_enter_read /comm == "myprog"/
+{
+    printf("PID '%d' has read file at %d ms\n", pid, nsecs / 1000000);
+}
+
+tracepoint:syscalls:sys_enter_close /comm == "myprog"/
+{
+    printf("PID '%d' has closed the file at %d ms\n", pid, nsecs / 1000000);
+}

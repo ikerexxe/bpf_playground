@@ -1,0 +1,10 @@
+#!/usr/bin/bpftrace
+
+//Confirm that myprog application has slept for one second
+
+BEGIN { @checkpoint = nsecs; }
+    kprobe:do_nanosleep /comm == "myprog"/
+    {
+        printf("PID '%d' has slept %d ms\n", pid, (nsecs - @checkpoint) / 1000000);
+        @checkpoint = nsecs;
+    }

@@ -1,0 +1,9 @@
+#!/usr/bin/bpftrace
+
+tracepoint:syscalls:sys_enter_read
+{
+    @reads = count();
+    if (args->count > 1024) {
+        @large = count();
+    }
+}

@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+profile:hz:99
+{
+    @[tid] = count();
+}

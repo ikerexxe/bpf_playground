@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+uretprobe:/bin/bash:readline
+{
+    printf("read a line\n");
+}

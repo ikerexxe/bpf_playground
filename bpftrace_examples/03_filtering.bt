@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+kprobe:vfs_read /arg2 < 16/
+{
+    printf("small read: %d byte buffer\n", arg2);
+}
