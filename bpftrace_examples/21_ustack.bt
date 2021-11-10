@@ -1,0 +1,8 @@
+#!/usr/bin/bpftrace
+
+//Print the user-level stack when the files is read
+
+tracepoint:syscalls:sys_enter_read /comm == "myprog"/
+{
+    printf("Block I/O by %s\n", ustack);
+}
