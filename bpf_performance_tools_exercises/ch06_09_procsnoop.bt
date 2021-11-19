@@ -1,0 +1,14 @@
+#!/usr/bin/bpftrace
+
+BEGIN
+{
+    printf("%-10s %-5s %-20s %s\n", "TIME(ms)", "PID", "PROCNAME", "PROBENAME");
+}
+
+tracepoint:syscalls:sys_enter_fork,
+tracepoint:syscalls:sys_enter_vfork,
+tracepoint:syscalls:sys_enter_clone,
+tracepoint:syscalls:sys_enter_clone3
+{
+    printf("%-10u %-5d %-20s %s\n", elapsed / 1000000, pid, comm, probe);
+}

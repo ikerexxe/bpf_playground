@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+profile:hz:99 /cpu == 0/
+{
+	@[kstack] = count();
+}

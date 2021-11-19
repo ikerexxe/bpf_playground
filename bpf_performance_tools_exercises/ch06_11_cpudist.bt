@@ -1,0 +1,33 @@
+#!/usr/bin/bpftrace
+
+#include <linux/sched.h>
+
+BEGIN
+{
+    printf("Tracing on-CPU time... Hit Ctrl-C to end.\n");
+}
+
+tracepoint:sched:sched_wakeup,
+tracepoint:sched:sched_wakeup_new
+{
+    @qtime[args->pid] = nsecs;
+}
+
+tracepoint:sched:sched_switch
+{
+    if (args->prev_state == TASK_RUNNING) {
+        @qtime[args->prev_pid] = nsecs;
+    }
+
+    $ns = @qtime[args->next_pid];
+    if ($ns) {
+        @usecs = hist((nsecs - $ns) / 1000);
+    }
+    delete(@qtime[args->next_pid]);
+}
+
+END
+{
+    printf("\n%-18s %s %s\n", "TIME(us)", "COUNT", "DISTRIBUTION");
+    clear(@qtime);
+}
