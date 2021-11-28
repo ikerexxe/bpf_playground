@@ -1,0 +1,22 @@
+#!/usr/bin/bpftrace
+
+BEGIN
+{
+    printf("Tracing on-CPU time... Hit Ctrl-C to end.\n");
+}
+
+tracepoint:compaction:mm_compaction_begin
+{
+    @ptime[pid] = nsecs;
+}
+
+tracepoint:compaction:mm_compaction_end
+{
+    @usecs = hist((nsecs - @ptime[pid]) / 1000);
+    delete(@ptime[pid]);
+}
+
+END                                                                             
+{
+    printf("\n%-18s %s %s\n", "TIME(us)", "COUNT", "DISTRIBUTION");
+} 

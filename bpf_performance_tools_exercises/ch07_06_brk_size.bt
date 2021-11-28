@@ -1,0 +1,8 @@
+#!/usr/bin/bpftrace
+
+// I don't think this is the answer to the problem but it's better than nothing
+
+tracepoint:syscalls:sys_enter_brk
+{
+    printf("%lu\n", args->brk);
+}

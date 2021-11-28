@@ -1,0 +1,7 @@
+#!/usr/bin/bpftrace
+
+tracepoint:syscalls:sys_enter_brk,
+tracepoint:syscalls:sys_enter_mmap
+{
+    @[ustack, comm] = count();
+}
