@@ -1,0 +1,20 @@
+#!/usr/bin/bpftrace
+
+BEGIN
+{
+    printf("Tracing soft irq event time... Hit Ctrl-C to end.\n");
+    
+    printf("%-10s %s\n", "TIME(us)", "NAME");
+}
+
+tracepoint:irq:softirq_entry
+{
+    @starttime[comm] = nsecs;
+}
+
+tracepoint:irq:softirq_exit
+{
+    $time = nsecs - @starttime[comm];
+    printf("%-10u %s\n", $time, comm);
+    delete(@starttime[comm]);
+}
