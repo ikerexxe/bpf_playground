@@ -1,0 +1,36 @@
+#!/usr/bin/bpftrace
+
+BEGIN
+{
+    printf("%-12s %-16s %-6s %7s\n", "TIME(ms)", "COMM", "PID", "LAT(ms)");
+}
+
+tracepoint:block:block_rq_issue
+{
+    @start[args->dev, args->sector] = nsecs;
+    @iopid[args->dev, args->sector] = pid;
+    @iocomm[args->dev, args->sector] = comm;
+}
+
+tracepoint:block:block_rq_complete / @start[args->dev, args->sector] != 0 &&
+                                     @iopid[args->dev, args->sector] != 0 &&
+                                     @iocomm[args->dev, args->sector] != "" /
+{
+    $now = nsecs;
+    printf("%-12u %-16s %-6d %7d\n",
+           elapsed / 1000000,
+           @iocomm[args->dev, args->sector],
+           @iopid[args->dev, args->sector],
+           ($now - @start[args->dev, args->sector]) / 1000000);
+
+    delete(@start[args->dev, args->sector]);
+    delete(@iopid[args->dev, args->sector]);
+    delete(@iocomm[args->dev, args->sector]);
+}
+
+END
+{
+    clear(@start);
+    clear(@iopid);
+    clear(@iocomm);
+}

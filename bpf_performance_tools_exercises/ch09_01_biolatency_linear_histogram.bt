@@ -1,0 +1,22 @@
+#!/usr/bin/bpftrace
+
+BEGIN
+{
+    printf("Tracing block device I/O... Hit Ctrl-C to end.\n");
+}
+
+kprobe:blk_account_io_start
+{
+    @start[arg0] = nsecs;
+}
+
+kprobe:blk_account_io_done /@start[arg0]/
+{
+    @msecs = lhist((nsecs - @start[arg0]), 0, 100, 1);
+    delete(@start[arg0]);
+}
+
+END
+{
+    clear(@start);
+}

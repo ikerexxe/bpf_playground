@@ -1,0 +1,11 @@
+#!/usr/bin/bpftrace
+
+BEGIN
+{
+    printf("Tracing block device I/O... Hit Ctrl-C to end.\n");
+}
+
+tracepoint:block:block_rq_complete
+{
+    @completion[cpu] = count();
+}
