@@ -1,0 +1,52 @@
+#!/usr/bin/bpftrace
+
+#include <linux/in.h>
+#include <linux/in6.h>
+
+BEGIN
+{
+    printf("%-5s %-10s %-10s %-40s %-5s %-5s\n",
+           "PID", "COMM", "TYPE", "ADDR", "PORT", "MS");
+}
+
+tracepoint:syscalls:sys_enter_connect
+{
+    @start[tid] = nsecs;
+    @sockaddr[tid] = args->uservaddr;
+    @type[tid] = "CONNECT";
+}
+
+tracepoint:syscalls:sys_enter_accept,
+tracepoint:syscalls:sys_enter_accept4
+{
+    @start[tid] = nsecs;
+    @sockaddr[tid] = args->upeer_sockaddr;
+    @type[tid] = "ACCEPT";
+}
+
+tracepoint:syscalls:sys_enter_close /@start[tid]/
+{
+    if (@sockaddr[tid]->sa_family == AF_INET) {
+        $s4 = (struct sockaddr_in *)@sockaddr[tid];
+        $addr = ntop(AF_INET, $s4->sin_addr.s_addr);
+        $port = ($s4->sin_port >> 8) | (($s4->sin_port << 8) & 0xff00);
+    } else {
+        $s6 = (struct sockaddr_in6 *)@sockaddr[tid];
+        $addr = ntop(AF_INET6, $s6->sin6_addr.in6_u.u6_addr8);
+        $port = ($s6->sin6_port >> 8) | (($s6->sin6_port << 8) & 0xff00);
+    }
+    printf("%-5d %-10s %-10s %-40s %-5d %-5d\n",
+           pid, comm, @type[tid], $addr, $port,
+           (nsecs - @start[tid]) / 1000);
+
+    delete(@start[tid]);
+    delete(@sockaddr[tid]);
+    delete(@type[tid]);
+}
+
+END
+{
+    clear(@start);
+    clear(@sockaddr);
+    clear(@type);
+}
