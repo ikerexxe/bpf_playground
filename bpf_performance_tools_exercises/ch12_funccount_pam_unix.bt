@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+u:/usr/lib64/security/pam_unix.so:pam*
+{
+    @[probe] = count();
+}

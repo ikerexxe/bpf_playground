@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+u:/home/ipedrosa/bpf/ch12_test:find_path
+{
+    printf("Calling find_path: arg0 %s, arg1 %s\n", str(arg0), str(arg1));
+}

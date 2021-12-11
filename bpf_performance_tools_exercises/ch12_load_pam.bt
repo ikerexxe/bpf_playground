@@ -1,0 +1,12 @@
+#!/usr/bin/bpftrace
+
+u:/usr/lib64/libc.so.6:dlopen /strncmp("/usr/lib64/security/pam", str(arg0), 23) == 0/
+{
+    printf("\n");
+    printf("%s is opening %s\n", comm, str(arg0));
+}
+
+u:/usr/lib64/libc.so.6:dlsym /strncmp("pam", str(arg1), 3) == 0/
+{
+    printf("%s is loading %s\n", comm, str(arg1));
+}
