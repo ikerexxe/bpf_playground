@@ -1,0 +1,8 @@
+#!/usr/bin/bpftrace
+
+//From "BPF Performance Tools" book
+
+u:/usr/lib64/libpam.so.0:pam_start
+{
+    printf("%s: %s\n", str(arg0), str(arg1));
+}
