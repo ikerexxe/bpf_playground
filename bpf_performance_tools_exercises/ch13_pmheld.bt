@@ -1,0 +1,38 @@
+#!/usr/bin/bpftrace
+
+//From "BPF Performance Tools" book
+
+BEGIN
+{
+    printf("Tracing libpthread mutex held times, Ctrl-C to end.\n");
+}
+
+uprobe:/usr/lib64/libpthread.so.0:pthread_mutex_lock,
+uprobe:/usr/lib64/libpthread.so.0:pthread_mutex_trylock /$1 == 0 || pid == $1/
+{
+    @lock_addr[tid] = arg0;
+}
+
+uretprobe:/usr/lib64/libpthread.so.0:pthread_mutex_lock /($1 == 0 || pid == $1) && @lock_addr[tid]/
+{
+    @held_start[pid, @lock_addr[tid]] = nsecs;
+    delete(@lock_addr[tid]);
+}
+
+uretprobe:/usr/lib64/libpthread.so.0:pthread_mutex_trylock /retval == 0 && ($1 == 0 || pid == $1) && @lock_addr[tid]/
+{
+    @held_start[pid, @lock_addr[tid]] = nsecs;
+    delete(@lock_addr[tid]);
+}
+
+uprobe:/usr/lib64/libpthread.so.0:pthread_mutex_unlock /($1 == 0 || pid == $1) && @held_start[pid, arg0]/
+{
+    @held_time_ns[usym(arg0), ustack(5), comm] = hist(nsecs - @held_start[pid, arg0]);
+    delete(@held_start[pid, arg0]);
+}
+
+END
+{
+    clear(@lock_addr);
+    clear(@held_start);
+}
